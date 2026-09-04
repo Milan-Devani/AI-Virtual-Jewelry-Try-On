@@ -12,13 +12,17 @@ export class SupabaseStorageProvider implements StorageProvider {
   constructor() {
     this.bucket = config.storage.supabase.bucket;
     if (config.storage.supabase.url && config.storage.supabase.serviceKey) {
-      this.supabase = createClient(
-        config.storage.supabase.url,
-        config.storage.supabase.serviceKey,
-        {
-          auth: { persistSession: false },
-        }
-      );
+      try {
+        this.supabase = createClient(
+          config.storage.supabase.url,
+          config.storage.supabase.serviceKey,
+          {
+            auth: { persistSession: false, autoRefreshToken: false },
+          }
+        );
+      } catch (err) {
+        logger.error({ err }, "Error instantiating Supabase client");
+      }
     }
   }
 
