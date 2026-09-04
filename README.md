@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # JEWELAI — Production-Ready AI Jewelry Virtual Try-On Platform
 
 JEWELAI is a full-stack virtual try-on SaaS web application specifically engineered for luxury Indian and global jewelry e-commerce. It uses Gemini image models to synthesize photorealistic images of a target model wearing an uploaded jewelry piece while preserving model identity and strict jewelry product fidelity across 7 distinct categories.
@@ -170,3 +171,6 @@ Suite covers:
 2. **Magic Byte Verification**: File payloads are verified at byte-level before decompression to prevent arbitrary upload exploits.
 3. **UUID Naming**: Original client filenames are sanitized and replaced with cryptographically secure UUID keys.
 4. **Rate Limiting**: AI generation endpoints are rate-limited to avoid abuse and denial of service.
+=======
+# AI-Virtual-Jewelry-Try-On
+>>>>>>> d0c715f3e8c9f8700934e3a3691976521935f640
