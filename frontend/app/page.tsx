@@ -10,6 +10,7 @@ import { LiveProgress } from "../components/ai-tryon/LiveProgress";
 import { ResultSection } from "../components/result/ResultSection";
 import { HistoryModal } from "../components/result/HistoryModal";
 import { SettingsModal } from "../components/layout/SettingsModal";
+import { Modal } from "../components/ui/dialog";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import {
@@ -19,14 +20,25 @@ import {
   ImageSizeQuality,
   TryOnGenerationResult,
 } from "../types";
-import { generateTryOnApi } from "../services/api";
-import { Sparkles, AlertCircle } from "lucide-react";
+import { generateTryOnApi, ApiErrorWithDetails } from "../services/api";
+import { JEWELRY_CATEGORIES } from "../constants/categories";
+import { Sparkles, AlertTriangle, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 export default function TryOnWorkspacePage() {
   // Modal States
   const [isHistoryOpen, setIsHistoryOpen] = React.useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
+
+  // Category Mismatch Modal Popup State
+  const [mismatchModalData, setMismatchModalData] = React.useState<{
+    isOpen: boolean;
+    message: string;
+    suggestedCategory?: string;
+  }>({
+    isOpen: false,
+    message: "",
+  });
 
   // Model & Jewelry Upload States
   const [modelState, setModelState] = React.useState<ImageFileState>({
@@ -93,11 +105,23 @@ export default function TryOnWorkspacePage() {
         resultRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 200);
     } catch (err: unknown) {
+      const apiErr = err as ApiErrorWithDetails;
       const errorMsg =
-        (err as Error)?.message ||
+        apiErr?.message ||
         "We couldn't generate the try-on image this time. Your uploaded files are preserved.";
+
       setGenerationError(errorMsg);
-      toast.error(errorMsg);
+
+      // If category or anatomical mismatch occurred, show modal popup
+      if (apiErr?.code === "INVALID_CATEGORY" || errorMsg.toLowerCase().includes("category")) {
+        setMismatchModalData({
+          isOpen: true,
+          message: errorMsg,
+          suggestedCategory: apiErr?.details?.suggestedCategory,
+        });
+      } else {
+        toast.error(errorMsg);
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -105,6 +129,14 @@ export default function TryOnWorkspacePage() {
 
   const handleRegenerate = () => {
     handleGenerate();
+  };
+
+  const handleSwitchCategory = (newCatId: string) => {
+    setSelectedCategory(newCatId);
+    setMismatchModalData({ isOpen: false, message: "" });
+    setGenerationError(null);
+    const catName = JEWELRY_CATEGORIES.find((c) => c.id === newCatId)?.name || newCatId;
+    toast.success(`Category updated to '${catName}'`);
   };
 
   return (
@@ -182,15 +214,15 @@ export default function TryOnWorkspacePage() {
               </div>
             )}
 
-            {/* Error Display */}
+            {/* Error Display Card */}
             {generationError && !isGenerating && (
               <div className="p-4 rounded-2xl bg-[#FFF6F6] border border-[#F6D2D2] flex items-start gap-3 text-xs text-[#C93B3B] animate-in fade-in">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-[#C93B3B]" />
                 <div className="flex-1">
-                  <p className="font-semibold">Generation Failed</p>
-                  <p className="mt-0.5 text-[#A53030]">{generationError}</p>
-                  <p className="mt-1 text-[11px] text-[#7A736B]">
-                    Your uploaded reference images and settings are preserved. Click below to try again.
+                  <p className="font-semibold">Category or Anatomical Mismatch</p>
+                  <p className="mt-0.5 text-[#A53030] leading-relaxed">{generationError}</p>
+                  <p className="mt-1.5 text-[11px] text-[#7A736B]">
+                    Please select the matching category for your uploaded images or upload an image showing the required body area.
                   </p>
                 </div>
               </div>
@@ -252,6 +284,58 @@ export default function TryOnWorkspacePage() {
           </div>
         </div>
       </footer>
+
+      {/* Category / Anatomical Mismatch Modal Popup */}
+      <Modal
+        isOpen={mismatchModalData.isOpen}
+        onClose={() => setMismatchModalData({ isOpen: false, message: "" })}
+        title="Category Selection Mismatch"
+        description="Our AI Vision Analysis detected an anatomical placement conflict"
+        maxWidth="md"
+      >
+        <div className="space-y-4 text-xs">
+          <div className="p-4 rounded-2xl bg-[#FFF8F2] border border-[#F2D7BD] flex items-start gap-3 text-[#8A4A1C]">
+            <AlertTriangle className="w-5 h-5 shrink-0 text-[#C96826] mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-semibold text-sm text-[#1A1715]">Anatomical Conflict Detected</p>
+              <p className="text-[#6D401C] leading-relaxed">{mismatchModalData.message}</p>
+            </div>
+          </div>
+
+          <p className="text-[#7A736B] leading-relaxed">
+            To generate a realistic virtual try-on, the visible body region in your model photo must match the jewelry item and selected category.
+          </p>
+
+          <div className="pt-2 flex items-center justify-end gap-2.5">
+            {mismatchModalData.suggestedCategory && (
+              <Button
+                variant="gold"
+                size="sm"
+                onClick={() =>
+                  handleSwitchCategory(mismatchModalData.suggestedCategory!)
+                }
+                className="flex items-center gap-1.5"
+              >
+                <span>
+                  Switch to{" "}
+                  {JEWELRY_CATEGORIES.find(
+                    (c) => c.id === mismatchModalData.suggestedCategory
+                  )?.name || mismatchModalData.suggestedCategory}
+                </span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            )}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setMismatchModalData({ isOpen: false, message: "" })}
+            >
+              Choose Manually
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* History Modal */}
       <HistoryModal

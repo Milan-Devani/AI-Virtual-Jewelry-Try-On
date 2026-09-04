@@ -19,6 +19,15 @@ export interface GenerateTryOnPayload {
   userId?: string;
 }
 
+export interface ApiErrorWithDetails extends Error {
+  code?: string;
+  details?: {
+    suggestedCategory?: string;
+    detectedModelRegions?: string[];
+    detectedJewelryType?: string;
+  };
+}
+
 export async function generateTryOnApi(
   payload: GenerateTryOnPayload,
   signal?: AbortSignal
@@ -46,8 +55,9 @@ export async function generateTryOnApi(
   if (!response.ok || !json.success) {
     const message = json?.error?.message || "Failed to generate try-on image.";
     const code = json?.error?.code || "AI_PROVIDER_ERROR";
-    const error = new Error(message) as Error & { code?: string };
+    const error = new Error(message) as ApiErrorWithDetails;
     error.code = code;
+    error.details = json?.error?.details;
     throw error;
   }
 

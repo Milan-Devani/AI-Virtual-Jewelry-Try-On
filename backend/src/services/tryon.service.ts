@@ -3,6 +3,7 @@ import sharp from "sharp";
 import { getStorageProvider } from "../storage/index.js";
 import { geminiImageService } from "./gemini.service.js";
 import { validateUploadedImage } from "../validators/imageValidator.js";
+import { validateTryOnCompatibility } from "./vision-validator.service.js";
 import { buildTryOnPrompt } from "../prompts/prompt-builder.js";
 import { getCategoryById } from "../constants/categories.js";
 import { logger } from "../utils/logger.js";
@@ -14,7 +15,7 @@ import {
   AspectRatio,
   ImageSizeQuality,
 } from "../types/index.js";
-import { NotFoundError } from "../utils/errors.js";
+import { NotFoundError, ValidationError } from "../utils/errors.js";
 
 // In-memory generation store for resilience and fast lookups
 const memoryGenerationStore = new Map<string, GenerationRecord>();
@@ -36,15 +37,41 @@ export class TryOnService {
       "Initiating virtual try-on generation pipeline"
     );
 
-    // 1. Strict Validation
+    // 1. Strict Format & Dimension Validation
     const [modelValidation, jewelryValidation] = await Promise.all([
       validateUploadedImage(input.modelImage, "model"),
       validateUploadedImage(input.jewelryImage, "jewelry"),
     ]);
 
+    // 2. AI Vision & Anatomical Compatibility Check (Top/Bottom/Category Mismatch)
+    const visionCheck = await validateTryOnCompatibility({
+      modelBuffer: input.modelImage.buffer,
+      modelMime: modelValidation.mimeType || "image/jpeg",
+      jewelryBuffer: input.jewelryImage.buffer,
+      jewelryMime: jewelryValidation.mimeType || "image/png",
+      category: input.category,
+    });
+
+    if (!visionCheck.valid) {
+      logger.warn(
+        { category: input.category, reason: visionCheck.reason },
+        "Rejected try-on request due to anatomical or category mismatch"
+      );
+      throw new ValidationError(
+        visionCheck.reason ||
+          `The selected category '${categoryName}' is not compatible with the visible parts of the model or the uploaded jewelry product.`,
+        "INVALID_CATEGORY",
+        {
+          suggestedCategory: visionCheck.suggestedCategory,
+          detectedModelRegions: visionCheck.detectedModelRegions,
+          detectedJewelryType: visionCheck.detectedJewelryType,
+        }
+      );
+    }
+
     const storage = getStorageProvider();
 
-    // 2. Upload reference assets securely with UUID keys (models/{generationId}/model.webp)
+    // 3. Upload reference assets securely with UUID keys (models/{generationId}/model.webp)
     const modelWebpBuffer = await sharp(input.modelImage.buffer).webp({ quality: 95 }).toBuffer();
     const jewelryWebpBuffer = await sharp(input.jewelryImage.buffer).webp({ quality: 95 }).toBuffer();
 
@@ -63,7 +90,7 @@ export class TryOnService {
       }),
     ]);
 
-    // 3. Register initial record
+    // 4. Register initial record
     const record: GenerationRecord = {
       id: generationId,
       userId,
@@ -80,7 +107,7 @@ export class TryOnService {
     memoryGenerationStore.set(generationId, record);
 
     try {
-      // 4. Construct category-specific master prompt
+      // 5. Construct category-specific master prompt
       const prompt = buildTryOnPrompt({
         category: input.category,
         background,
@@ -88,7 +115,7 @@ export class TryOnService {
         imageSize,
       });
 
-      // 5. Generate with Gemini
+      // 6. Generate with Gemini
       const generatedRaw = await geminiImageService.generateTryOn({
         modelBuffer: input.modelImage.buffer,
         modelMime: modelValidation.mimeType || "image/jpeg",
@@ -98,12 +125,12 @@ export class TryOnService {
         aspectRatio,
       });
 
-      // 6. Post-process to high-quality WebP
+      // 7. Post-process to high-quality WebP
       const processedWebp = await sharp(generatedRaw.buffer)
         .webp({ quality: 92, effort: 4 })
         .toBuffer();
 
-      // 7. Store generated asset
+      // 8. Store generated asset
       const storedGenerated = await storage.upload({
         key: `generated/${generationId}/result.webp`,
         buffer: processedWebp,
@@ -113,7 +140,7 @@ export class TryOnService {
 
       const durationMs = Date.now() - startTime;
 
-      // 8. Update record
+      // 9. Update record
       record.status = "completed";
       record.generatedImageUrl = storedGenerated.url;
       record.durationMs = durationMs;
@@ -169,7 +196,6 @@ export class TryOnService {
       records = records.filter((r) => r.category.toLowerCase() === category.toLowerCase());
     }
 
-    // Sort newest first
     return records.sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
