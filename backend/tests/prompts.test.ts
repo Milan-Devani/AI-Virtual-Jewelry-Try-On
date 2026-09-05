@@ -13,6 +13,7 @@ describe("Jewelry Categories & Prompt Engine", () => {
       "payal-anklets",
       "maang-tikka",
       "haath-phool",
+      "mangalsutra",
     ];
 
     const categoryIds = JEWELRY_CATEGORIES.map((c) => c.id);
@@ -22,6 +23,12 @@ describe("Jewelry Categories & Prompt Engine", () => {
       expect(catObj).toBeDefined();
       expect(catObj?.promptInstructions).toBeTruthy();
     });
+  });
+
+  it("should generate category-specific placement instructions for Mangalsutra", () => {
+    const prompt = buildTryOnPrompt({ category: "mangalsutra", background: "luxury" });
+    expect(prompt).toContain("black bead pattern");
+    expect(prompt).toContain("upper chest");
   });
 
   it("should generate category-specific placement instructions for Earrings", () => {

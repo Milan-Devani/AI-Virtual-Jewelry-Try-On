@@ -121,6 +121,20 @@ Preserve:
 - metalwork
 - proportions
 The connecting chain must naturally follow the hand anatomy.`
+  },
+  {
+    id: "mangalsutra",
+    name: "Mangalsutra",
+    placement: "neck",
+    description: "Traditional auspicious black-beaded gold chain necklace with central pendant",
+    suggestedAspectRatio: "4:5",
+    promptInstructions: `Place the exact mangalsutra naturally around the model's neck and draped over the upper chest.
+Preserve the exact:
+- black bead pattern and gold chain links
+- central pendant design, stones, and motifs
+- length, proportions, and draping curve
+- metalwork and finish
+The mangalsutra chain must rest naturally along the neckline and collarbones.`
   }
 ];
 

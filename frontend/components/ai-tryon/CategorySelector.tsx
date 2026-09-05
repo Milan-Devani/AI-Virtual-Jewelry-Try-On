@@ -45,7 +45,7 @@ export function CategorySelector({
         <label className="text-sm font-semibold text-[#1A1715] flex items-center gap-1.5">
           <span>Jewelry Category</span>
           <span className="text-xs font-normal text-[#8A837A]">
-            (7 Presets + Custom)
+            (8 Presets + Custom)
           </span>
         </label>
         <span className="text-xs text-[#8C6428] font-medium flex items-center gap-1">

@@ -50,6 +50,13 @@ export const JEWELRY_CATEGORIES: JewelryCategory[] = [
     description: "Hand harness connecting wrist bracelet to finger rings via chains",
     suggestedAspectRatio: "1:1",
   },
+  {
+    id: "mangalsutra",
+    name: "Mangalsutra",
+    placement: "neck",
+    description: "Traditional sacred black-beaded gold chain necklace with central pendant",
+    suggestedAspectRatio: "4:5",
+  },
 ];
 
 export const BACKGROUND_OPTIONS = [
