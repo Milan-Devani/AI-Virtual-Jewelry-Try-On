@@ -26,14 +26,24 @@ export class TryOnService {
     const generationId = uuidv4();
     const userId = input.userId || "anonymous";
     const categoryInfo = getCategoryById(input.category);
-    const categoryName = categoryInfo ? categoryInfo.name : input.category;
+    const categoryName = categoryInfo
+      ? categoryInfo.name
+      : input.customCategoryName || input.category;
 
     const background: BackgroundType = input.background || "studio";
     const aspectRatio: AspectRatio = input.aspectRatio || "4:5";
     const imageSize: ImageSizeQuality = input.imageSize || "2K";
 
     logger.info(
-      { generationId, category: input.category, background, aspectRatio, imageSize },
+      {
+        generationId,
+        category: input.category,
+        customCategoryName: input.customCategoryName,
+        customPlacement: input.customPlacement,
+        background,
+        aspectRatio,
+        imageSize,
+      },
       "Initiating virtual try-on generation pipeline"
     );
 
@@ -50,6 +60,8 @@ export class TryOnService {
       jewelryBuffer: input.jewelryImage.buffer,
       jewelryMime: jewelryValidation.mimeType || "image/png",
       category: input.category,
+      customCategoryName: input.customCategoryName,
+      customPlacement: input.customPlacement,
     });
 
     if (!visionCheck.valid) {
@@ -94,7 +106,7 @@ export class TryOnService {
     const record: GenerationRecord = {
       id: generationId,
       userId,
-      category: input.category,
+      category: categoryName,
       background,
       aspectRatio,
       imageSize,
@@ -110,6 +122,8 @@ export class TryOnService {
       // 5. Construct category-specific master prompt
       const prompt = buildTryOnPrompt({
         category: input.category,
+        customCategoryName: input.customCategoryName,
+        customPlacement: input.customPlacement,
         background,
         aspectRatio,
         imageSize,

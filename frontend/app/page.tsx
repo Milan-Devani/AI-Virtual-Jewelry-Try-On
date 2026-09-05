@@ -87,6 +87,9 @@ export default function TryOnWorkspacePage() {
 
   // Settings
   const [selectedCategory, setSelectedCategory] = React.useState<string>("earrings");
+  const [customCategoryName, setCustomCategoryName] = React.useState<string>("Nath / Nose Ring");
+  const [customPlacement, setCustomPlacement] = React.useState<string>("nose & nostril");
+
   const [background, setBackground] = React.useState<BackgroundType>("studio");
   const [aspectRatio, setAspectRatio] = React.useState<AspectRatio>("4:5");
   const [imageSize, setImageSize] = React.useState<ImageSizeQuality>("2K");
@@ -112,6 +115,11 @@ export default function TryOnWorkspacePage() {
       return;
     }
 
+    if (selectedCategory === "custom" && !customCategoryName.trim()) {
+      toast.error("Please enter a custom jewelry category name.");
+      return;
+    }
+
     setIsGenerating(true);
     setGenerationError(null);
 
@@ -120,6 +128,8 @@ export default function TryOnWorkspacePage() {
         modelFile: modelState.file,
         jewelryFile: jewelryState.file,
         category: selectedCategory,
+        customCategoryName: selectedCategory === "custom" ? customCategoryName : undefined,
+        customPlacement: selectedCategory === "custom" ? customPlacement : undefined,
         background,
         aspectRatio,
         imageSize,
@@ -223,11 +233,15 @@ export default function TryOnWorkspacePage() {
               />
             </div>
 
-            {/* Category Selector */}
+            {/* Category Selector with Custom Category Support */}
             <div className="pt-2 border-t border-[#F0EBE3]">
               <CategorySelector
                 selectedCategory={selectedCategory}
                 onSelectCategory={setSelectedCategory}
+                customCategoryName={customCategoryName}
+                onChangeCustomCategoryName={setCustomCategoryName}
+                customPlacement={customPlacement}
+                onChangeCustomPlacement={setCustomPlacement}
                 disabled={isGenerating}
               />
             </div>

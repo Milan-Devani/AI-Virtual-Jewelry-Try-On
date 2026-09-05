@@ -17,6 +17,8 @@ export interface ValidateCompatibilityParams {
   jewelryBuffer: Buffer;
   jewelryMime: string;
   category: string;
+  customCategoryName?: string;
+  customPlacement?: string;
 }
 
 export async function validateTryOnCompatibility(
@@ -24,40 +26,37 @@ export async function validateTryOnCompatibility(
 ): Promise<VisionValidationResult> {
   const apiKey = config.gemini.apiKey;
   if (!apiKey) {
-    // If no key is set, proceed to let main service handle it
     return { valid: true };
   }
 
   const categoryObj = getCategoryById(params.category);
-  const categoryName = categoryObj ? categoryObj.name : params.category;
-  const placement = categoryObj ? categoryObj.placement : "body";
+  const categoryName = categoryObj
+    ? categoryObj.name
+    : params.customCategoryName || params.category;
+  const placement = categoryObj
+    ? categoryObj.placement
+    : params.customPlacement || "body";
 
   const prompt = `You are an expert AI vision validator for a luxury jewelry virtual try-on platform.
 You are given two images:
 - IMAGE 1: The Human Model photo.
 - IMAGE 2: The Jewelry Product photo.
-- USER SELECTED CATEGORY: "${params.category}" (${categoryName}, intended placement: ${placement}).
+- USER SELECTED CATEGORY: "${params.category}" (Name: "${categoryName}", intended placement on model: "${placement}").
 
 Analyze both images carefully:
 1. MODEL IMAGE ANALYSIS:
    - Is a human model / person visible?
-   - What body regions are clearly visible? (Options: ["head_face", "ears", "neck_chest", "hands_wrists", "ankles_feet", "full_body"])
-   - Does the model image contain the necessary body part to wear the selected category?
-     * "earrings" / "jhumkas" REQUIRES ears or face.
-     * "necklaces-pendants" REQUIRES neck or upper chest.
-     * "maang-tikka" REQUIRES forehead or hair parting.
-     * "bracelets-wristwear" REQUIRES wrists or hands.
-     * "haath-phool" REQUIRES hands and fingers.
-     * "payal-anklets" REQUIRES ankles or feet.
+   - What body regions are clearly visible? (Options: ["head_face", "ears", "neck_chest", "hands_wrists", "ankles_feet", "waist", "nose", "arms", "full_body"])
+   - Does the model image contain the necessary body part to wear the jewelry on the intended placement ("${placement}")?
 
 2. JEWELRY IMAGE ANALYSIS:
-   - What jewelry item is actually shown in Image 2? (Options: "earrings", "necklace", "necklace_and_earrings_set", "bracelet", "anklet_payal", "maang_tikka", "haath_phool", "ring", "other")
-   - Is this jewelry item compatible with the selected category "${params.category}"?
+   - What jewelry item is actually shown in Image 2?
+   - Is this jewelry item compatible with the intended category "${categoryName}" on "${placement}"?
 
 3. FINAL DECISION:
-   - If the model image DOES NOT show the required body part for this category (e.g. user selected 'payal-anklets' but model is only head/face/upper body), set "valid": false.
-   - If the jewelry item is clearly a different type than the selected category (e.g. jewelry is a necklace/earrings but category is 'payal-anklets'), set "valid": false.
-   - Otherwise, set "valid": true.
+   - If the model image DOES NOT show the required body part for placement on "${placement}" (e.g. user selected feet/ankles/waist but model is only head/face/upper body), set "valid": false.
+   - If the jewelry item is clearly completely incompatible with "${categoryName}", set "valid": false.
+   - If the model image shows the appropriate body part and jewelry matches, set "valid": true.
 
 Return ONLY a valid JSON object matching this schema:
 {
@@ -66,7 +65,7 @@ Return ONLY a valid JSON object matching this schema:
   "jewelryMatchesCategory": boolean,
   "detectedModelRegions": string[],
   "detectedJewelryType": string,
-  "reason": "Detailed, polite and friendly explanation if valid is false, explaining why the selected category doesn't match the visible model body parts or product type, and suggesting the correct category to choose.",
+  "reason": "Detailed, polite explanation if valid is false, explaining why the selected category doesn't match the visible model body parts or product type, and suggesting the correct category to choose.",
   "suggestedCategory": "earrings" | "necklaces-pendants" | "bracelets-wristwear" | "jhumkas" | "payal-anklets" | "maang-tikka" | "haath-phool"
 }`;
 
@@ -77,7 +76,7 @@ Return ONLY a valid JSON object matching this schema:
     const jewelryBase64 = params.jewelryBuffer.toString("base64");
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 12000); // Fast 12s timeout
+    const timer = setTimeout(() => controller.abort(), 12000);
 
     const response = await fetch(url, {
       method: "POST",
@@ -134,7 +133,6 @@ Return ONLY a valid JSON object matching this schema:
     return { valid: true };
   } catch (err: unknown) {
     logger.warn({ err: (err as Error)?.message }, "Vision compatibility pre-check failed, continuing with generation");
-    // Don't block generation if the pre-check times out or errors
     return { valid: true };
   }
 }

@@ -31,6 +31,8 @@ export class TryOnController {
         modelImage: modelFile,
         jewelryImage: jewelryFile,
         category: parsedParams.data.category,
+        customCategoryName: parsedParams.data.customCategoryName,
+        customPlacement: parsedParams.data.customPlacement,
         background: parsedParams.data.background,
         aspectRatio: parsedParams.data.aspectRatio,
         imageSize: parsedParams.data.imageSize,

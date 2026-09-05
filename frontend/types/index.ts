@@ -15,6 +15,8 @@ export interface TryOnGenerationResult {
   id: string;
   category: string;
   categoryName: string;
+  customCategoryName?: string;
+  customPlacement?: string;
   imageUrl: string;
   modelImageUrl: string;
   jewelryImageUrl: string;

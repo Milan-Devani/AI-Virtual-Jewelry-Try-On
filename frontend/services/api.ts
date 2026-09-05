@@ -13,6 +13,8 @@ export interface GenerateTryOnPayload {
   modelFile: File;
   jewelryFile: File;
   category: string;
+  customCategoryName?: string;
+  customPlacement?: string;
   background: BackgroundType;
   aspectRatio: AspectRatio;
   imageSize: ImageSizeQuality;
@@ -36,6 +38,14 @@ export async function generateTryOnApi(
   formData.append("modelImage", payload.modelFile);
   formData.append("jewelryImage", payload.jewelryFile);
   formData.append("category", payload.category);
+
+  if (payload.customCategoryName) {
+    formData.append("customCategoryName", payload.customCategoryName);
+  }
+  if (payload.customPlacement) {
+    formData.append("customPlacement", payload.customPlacement);
+  }
+
   formData.append("background", payload.background);
   formData.append("aspectRatio", payload.aspectRatio);
   formData.append("imageSize", payload.imageSize);
@@ -126,7 +136,7 @@ export function saveHistoryLocally(result: TryOnGenerationResult): void {
     const record: GenerationRecord = {
       id: result.id,
       userId: "anonymous",
-      category: result.category,
+      category: result.categoryName || result.category,
       background: result.background,
       aspectRatio: result.aspectRatio,
       imageSize: result.imageSize,

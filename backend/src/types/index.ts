@@ -7,6 +7,8 @@ export interface TryOnInput {
   modelImage: Express.Multer.File;
   jewelryImage: Express.Multer.File;
   category: string;
+  customCategoryName?: string;
+  customPlacement?: string;
   background?: BackgroundType;
   aspectRatio?: AspectRatio;
   imageSize?: ImageSizeQuality;

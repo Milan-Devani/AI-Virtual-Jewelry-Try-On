@@ -3,13 +3,19 @@ import { getPlacementPromptForCategory, getBackgroundPrompt } from "./jewelry-pl
 
 export interface PromptBuildOptions {
   category: string;
+  customCategoryName?: string;
+  customPlacement?: string;
   background?: string;
   aspectRatio?: string;
   imageSize?: string;
 }
 
 export function buildTryOnPrompt(options: PromptBuildOptions): string {
-  const placement = getPlacementPromptForCategory(options.category);
+  const placement = getPlacementPromptForCategory(
+    options.category,
+    options.customCategoryName,
+    options.customPlacement
+  );
   const background = getBackgroundPrompt(options.background);
 
   let prompt = BASE_SYSTEM_PROMPT.replace("{{CATEGORY_PLACEMENT}}", placement).replace(

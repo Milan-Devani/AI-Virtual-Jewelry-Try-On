@@ -7,12 +7,26 @@ export const BACKGROUND_PROMPTS: Record<string, string> = {
   outdoor: "tasteful softly blurred outdoor fashion environment in golden hour natural light",
 };
 
-export function getPlacementPromptForCategory(categoryId: string): string {
+export function getPlacementPromptForCategory(
+  categoryId: string,
+  customName?: string,
+  customPlacement?: string
+): string {
   const category = getCategoryById(categoryId);
-  if (!category) {
-    return "Place the exact jewelry product naturally on the model in the anatomically correct position with realistic contact shadows and scale.";
+  if (category) {
+    return category.promptInstructions;
   }
-  return category.promptInstructions;
+
+  // Custom Category prompt formulation
+  const name = customName || categoryId;
+  const placementLocation = customPlacement || "appropriate anatomical location";
+
+  return `Place the exact jewelry product (${name}) naturally and seamlessly on the model's ${placementLocation}.
+Preserve:
+- full jewelry geometry and craftsmanship
+- gemstones, metalwork, and delicate ornaments
+- proportions and natural perspective
+Make it physically wrap or attach to the model's ${placementLocation} with realistic contact shadows and photorealistic reflections.`;
 }
 
 export function getBackgroundPrompt(background?: string): string {
