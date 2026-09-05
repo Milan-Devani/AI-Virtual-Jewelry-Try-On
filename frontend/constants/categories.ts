@@ -64,6 +64,13 @@ export const JEWELRY_CATEGORIES: JewelryCategory[] = [
     description: "Matching set with auspicious mangalsutra necklace and coordinating earrings",
     suggestedAspectRatio: "4:5",
   },
+  {
+    id: "full-bridal-set",
+    name: "Full Bridal / All-in-One Set",
+    placement: "full body / all",
+    description: "Complete set: Necklace, Earrings, Maang Tikka, Bangles & Nath worn together",
+    suggestedAspectRatio: "4:5",
+  },
 ];
 
 export const BACKGROUND_OPTIONS = [

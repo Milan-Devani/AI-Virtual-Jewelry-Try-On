@@ -153,6 +153,21 @@ The mangalsutra chain must rest naturally along the neckline and collarbones.`
    - earring shape, stones, hanging latkans, and metalwork
    - apply the matching pair to both ears
 Ensure cohesive lighting, contact shadows, and realistic perspective across both the neck and ears.`
+  },
+  {
+    id: "full-bridal-set",
+    name: "Full Bridal / All-in-One Set",
+    placement: "full body / all",
+    description: "Complete multi-piece jewelry suite: Necklace, Earrings, Maang Tikka, Bangles/Haath Phool, & Nath",
+    suggestedAspectRatio: "4:5",
+    promptInstructions: `This is a Complete Multi-Piece Luxury / Bridal Jewelry Set.
+Inspect all jewelry pieces present in the product image and fit them seamlessly across all appropriate anatomical regions on the model:
+1. Neck & Chest: Place the necklace, choker, and long haar with exact gemstone clusters, pendants, and layering.
+2. Ears: Place the matching earrings or jhumkas naturally on both ears.
+3. Forehead & Hairline: Place the maang tikka / matha patti centered along the hair parting.
+4. Wrists & Hands: Place matching bangles, kadas, or haath phool if visible in the product image.
+5. Nose & Face: Place the bridal nath / nose ring if visible in the product image.
+Strictly preserve each piece's exact metalwork, gemstones, motifs, and finish while creating a harmonized, photorealistic bridal ensemble with realistic depth and contact shadows.`
   }
 ];
 

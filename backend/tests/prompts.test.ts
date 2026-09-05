@@ -15,6 +15,7 @@ describe("Jewelry Categories & Prompt Engine", () => {
       "haath-phool",
       "mangalsutra",
       "mangalsutra-earrings",
+      "full-bridal-set",
     ];
 
     const categoryIds = JEWELRY_CATEGORIES.map((c) => c.id);
@@ -24,6 +25,13 @@ describe("Jewelry Categories & Prompt Engine", () => {
       expect(catObj).toBeDefined();
       expect(catObj?.promptInstructions).toBeTruthy();
     });
+  });
+
+  it("should generate category-specific placement instructions for Full Bridal / All-in-One Set", () => {
+    const prompt = buildTryOnPrompt({ category: "full-bridal-set", background: "luxury" });
+    expect(prompt).toContain("Complete Multi-Piece Luxury / Bridal Jewelry Set");
+    expect(prompt).toContain("Forehead & Hairline");
+    expect(prompt).toContain("Wrists & Hands");
   });
 
   it("should generate category-specific placement instructions for Mangalsutra", () => {
