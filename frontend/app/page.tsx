@@ -200,8 +200,8 @@ export default function TryOnWorkspacePage() {
         <Hero />
 
         {/* Main Workspace Card */}
-        <Card className="w-full bg-white border border-[#E8E1D6] rounded-3xl shadow-card overflow-hidden">
-          <CardContent className="p-6 sm:p-8 space-y-6">
+        <Card className="w-full bg-white border border-[#E8E1D6] rounded-3xl shadow-card overflow-visible">
+          <CardContent className="p-6 sm:p-8 space-y-6 overflow-visible">
             {/* Section Header */}
             <div className="flex items-center justify-between pb-4 border-b border-[#F0EBE3]">
               <div>

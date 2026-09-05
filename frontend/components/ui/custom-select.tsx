@@ -85,7 +85,10 @@ export function CustomSelect<T extends string = string>({
   };
 
   return (
-    <div className={cn("relative w-full", className)} ref={containerRef}>
+    <div
+      className={cn("relative w-full", isOpen ? "z-40" : "z-10", className)}
+      ref={containerRef}
+    >
       {label && (
         <label className="text-xs font-medium text-[#6B645D] block mb-1.5">
           {label}
