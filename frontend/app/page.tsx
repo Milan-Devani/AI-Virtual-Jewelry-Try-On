@@ -6,6 +6,7 @@ import { Hero } from "../components/layout/Hero";
 import { ImageUploader } from "../components/upload/ImageUploader";
 import { CategorySelector } from "../components/ai-tryon/CategorySelector";
 import { GenerationSettings } from "../components/ai-tryon/GenerationSettings";
+import { AiModelCustomizer } from "../components/ai-tryon/AiModelCustomizer";
 import { LiveProgress } from "../components/ai-tryon/LiveProgress";
 import { ResultSection } from "../components/result/ResultSection";
 import { HistoryModal } from "../components/result/HistoryModal";
@@ -19,11 +20,14 @@ import {
   AspectRatio,
   ImageSizeQuality,
   TryOnGenerationResult,
+  TryOnMode,
+  AiModelConfig,
 } from "../types";
 import { generateTryOnApi, ApiErrorWithDetails } from "../services/api";
 import { JEWELRY_CATEGORIES } from "../constants/categories";
-import { Sparkles, AlertTriangle, ArrowRight } from "lucide-react";
+import { Sparkles, AlertTriangle, ArrowRight, Camera, Wand2 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "../lib/utils";
 
 // Smart helper to extract suggested categories from details or message
 function extractSuggestedCategories(
@@ -56,6 +60,21 @@ export default function TryOnWorkspacePage() {
   // Modal States
   const [isHistoryOpen, setIsHistoryOpen] = React.useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
+
+  // Workflow Mode State: Upload Human Model vs Generate AI Virtual Model
+  const [tryOnMode, setTryOnMode] = React.useState<TryOnMode>("custom-model");
+
+  // AI Virtual Model Persona Config
+  const [aiModelConfig, setAiModelConfig] = React.useState<AiModelConfig>({
+    gender: "female",
+    ethnicityRegion: "gujarati",
+    clothingStyle: "gujarati",
+    skinTone: "wheatish",
+    hairType: "wavy",
+    hairColor: "natural-black",
+    eyeColor: "deep-brown",
+    expression: "serene, confident, and regal editorial expression",
+  });
 
   // Category Mismatch Modal Popup State
   const [mismatchModalData, setMismatchModalData] = React.useState<{
@@ -102,16 +121,24 @@ export default function TryOnWorkspacePage() {
   // Scroll to result on success
   const resultRef = React.useRef<HTMLDivElement>(null);
 
-  const canGenerate =
-    modelState.isValid &&
-    modelState.file &&
-    jewelryState.isValid &&
-    jewelryState.file &&
-    !isGenerating;
+  const isAiModelMode = tryOnMode === "ai-model";
+
+  const canGenerate = isAiModelMode
+    ? jewelryState.isValid && jewelryState.file && !isGenerating
+    : modelState.isValid &&
+      modelState.file &&
+      jewelryState.isValid &&
+      jewelryState.file &&
+      !isGenerating;
 
   const handleGenerate = async () => {
-    if (!modelState.file || !jewelryState.file) {
-      toast.error("Please upload both a model image and a jewelry image.");
+    if (!isAiModelMode && !modelState.file) {
+      toast.error("Please upload a human model image.");
+      return;
+    }
+
+    if (!jewelryState.file) {
+      toast.error("Please upload a jewelry product image.");
       return;
     }
 
@@ -125,9 +152,11 @@ export default function TryOnWorkspacePage() {
 
     try {
       const response = await generateTryOnApi({
-        modelFile: modelState.file,
+        modelFile: isAiModelMode ? null : modelState.file,
         jewelryFile: jewelryState.file,
         category: selectedCategory,
+        mode: tryOnMode,
+        modelConfig: isAiModelMode ? aiModelConfig : undefined,
         customCategoryName: selectedCategory === "custom" ? customCategoryName : undefined,
         customPlacement: selectedCategory === "custom" ? customPlacement : undefined,
         background,
@@ -202,36 +231,94 @@ export default function TryOnWorkspacePage() {
         {/* Main Workspace Card */}
         <Card className="w-full bg-white border border-[#E8E1D6] rounded-3xl shadow-card overflow-visible">
           <CardContent className="p-6 sm:p-8 space-y-6 overflow-visible">
-            {/* Section Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-[#F0EBE3]">
+            {/* Section Header & Mode Switcher */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F0EBE3]">
               <div>
                 <h2 className="text-lg sm:text-xl font-serif font-bold text-[#1A1715]">
                   AI Try-On Studio Workspace
                 </h2>
                 <p className="text-xs text-[#7A736B] mt-0.5">
-                  Step 1: Upload model &amp; jewelry • Step 2: Choose placement &amp; render
+                  {isAiModelMode
+                    ? "Upload jewelry product & customize the AI model persona"
+                    : "Upload model & jewelry references • Choose category & render"}
                 </p>
+              </div>
+
+              {/* Mode Switcher Tabs */}
+              <div className="flex items-center p-1 rounded-2xl bg-[#F0EBE3] border border-[#E4DCD0] shrink-0">
+                <button
+                  type="button"
+                  disabled={isGenerating}
+                  onClick={() => setTryOnMode("custom-model")}
+                  className={cn(
+                    "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150 flex items-center gap-1.5",
+                    !isAiModelMode
+                      ? "bg-white text-[#1A1715] shadow-sm font-bold"
+                      : "text-[#7A736B] hover:text-[#1A1715]"
+                  )}
+                >
+                  <Camera className="w-3.5 h-3.5 text-[#B38541]" />
+                  <span>Upload Model (2 Images)</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isGenerating}
+                  onClick={() => setTryOnMode("ai-model")}
+                  className={cn(
+                    "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150 flex items-center gap-1.5",
+                    isAiModelMode
+                      ? "bg-white text-[#1A1715] shadow-sm font-bold"
+                      : "text-[#7A736B] hover:text-[#1A1715]"
+                  )}
+                >
+                  <Wand2 className="w-3.5 h-3.5 text-[#B38541]" />
+                  <span>Generate AI Model (Product Only)</span>
+                </button>
               </div>
             </div>
 
-            {/* Dual Upload Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <ImageUploader
-                id="model-image-input"
-                label="1. Human Model Reference"
-                subtitle="Model identity, skin tone, & pose reference"
-                state={modelState}
-                onChange={setModelState}
-              />
+            {/* Dynamic Studio Workspace Layout based on Mode */}
+            {!isAiModelMode ? (
+              /* Mode 1: Dual Upload Grid (Human Model + Product) */
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-in fade-in duration-200">
+                <ImageUploader
+                  id="model-image-input"
+                  label="1. Human Model Reference"
+                  subtitle="Model identity, skin tone, & pose reference"
+                  state={modelState}
+                  onChange={setModelState}
+                />
 
-              <ImageUploader
-                id="jewelry-image-input"
-                label="2. Exact Jewelry Product"
-                subtitle="High-fidelity product photo to place on model"
-                state={jewelryState}
-                onChange={setJewelryState}
-              />
-            </div>
+                <ImageUploader
+                  id="jewelry-image-input"
+                  label="2. Exact Jewelry Product"
+                  subtitle="High-fidelity product photo to place on model"
+                  state={jewelryState}
+                  onChange={setJewelryState}
+                />
+              </div>
+            ) : (
+              /* Mode 2: Product-Only Upload + AI Virtual Model Persona Customizer */
+              <div className="space-y-6 animate-in fade-in duration-200">
+                <div className="max-w-xl mx-auto">
+                  <ImageUploader
+                    id="jewelry-image-input-single"
+                    label="Jewelry Product Photo"
+                    subtitle="Upload the jewelry piece you want the AI model to wear"
+                    state={jewelryState}
+                    onChange={setJewelryState}
+                  />
+                </div>
+
+                {/* AI Virtual Model Customizer */}
+                <AiModelCustomizer
+                  config={aiModelConfig}
+                  onChange={setAiModelConfig}
+                  disabled={isGenerating}
+                />
+              </div>
+            )}
 
             {/* Category Selector with Custom Category Support */}
             <div className="pt-2 border-t border-[#F0EBE3]">
@@ -283,7 +370,15 @@ export default function TryOnWorkspacePage() {
             {/* Generate Action Button */}
             <div className="pt-4 border-t border-[#F0EBE3] flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-xs text-[#7A736B]">
-                {!modelState.isValid && !jewelryState.isValid ? (
+                {isAiModelMode ? (
+                  !jewelryState.isValid ? (
+                    <span>Upload a jewelry product image to generate your virtual model</span>
+                  ) : (
+                    <span className="text-[#1E7748] font-medium">
+                      ✓ Product photo ready • AI Model persona configured
+                    </span>
+                  )
+                ) : !modelState.isValid && !jewelryState.isValid ? (
                   <span>Upload both references to enable generation</span>
                 ) : !modelState.isValid ? (
                   <span>Upload a valid human model image</span>
@@ -305,7 +400,11 @@ export default function TryOnWorkspacePage() {
                 className="w-full sm:w-auto px-8 h-12 bg-gradient-to-r from-[#1A1816] to-[#2B2621] text-white shadow-md hover:shadow-lg transition-all"
               >
                 <Sparkles className="w-4 h-4 mr-2 text-[#D8B77E]" />
-                <span>Generate Virtual Try-On</span>
+                <span>
+                  {isAiModelMode
+                    ? "Generate Virtual Model Try-On"
+                    : "Generate Virtual Try-On"}
+                </span>
               </Button>
             </div>
           </CardContent>
@@ -330,7 +429,7 @@ export default function TryOnWorkspacePage() {
           <div className="flex items-center gap-4 text-[#7A736B]">
             <span>Model Identity Lock</span>
             <span>•</span>
-            <span>Gemini Neural Synthesis</span>
+            <span>AI Virtual Model Studio</span>
             <span>•</span>
             <span>Commercial E-commerce Export</span>
           </div>

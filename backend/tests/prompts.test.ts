@@ -94,6 +94,67 @@ describe("Jewelry Categories & Prompt Engine", () => {
     expect(prompt).toContain("Place the exact haath phool naturally on the model's hand");
   });
 
+  it("should generate AI Model persona prompts with Gujarati regional attire", () => {
+    const prompt = buildTryOnPrompt({
+      category: "necklaces-pendants",
+      mode: "ai-model",
+      modelConfig: {
+        gender: "female",
+        ethnicityRegion: "gujarati",
+        skinTone: "wheatish",
+        hairType: "bridal-updo",
+        hairColor: "natural-black",
+        eyeColor: "deep-brown",
+        clothingStyle: "gujarati",
+      },
+    });
+
+    expect(prompt).toContain("AI MODEL PERSONA SPECIFICATIONS");
+    expect(prompt).toContain("Panetar");
+    expect(prompt).toContain("Gharchola");
+    expect(prompt).toContain("wheatish");
+    expect(prompt).toContain("bridal hair bun");
+  });
+
+  it("should generate AI Model persona prompts with South Indian Kanjeevaram attire", () => {
+    const prompt = buildTryOnPrompt({
+      category: "maang-tikka",
+      mode: "ai-model",
+      modelConfig: {
+        gender: "female",
+        ethnicityRegion: "south-indian",
+        skinTone: "dusky",
+        hairType: "traditional-braid",
+        hairColor: "natural-black",
+        eyeColor: "black",
+        clothingStyle: "south-indian",
+      },
+    });
+
+    expect(prompt).toContain("Kanjeevaram");
+    expect(prompt).toContain("traditional braid");
+    expect(prompt).toContain("dusky");
+  });
+
+  it("should generate AI Model persona prompts for Men's Royal Sherwani", () => {
+    const prompt = buildTryOnPrompt({
+      category: "mens-groom-mala",
+      mode: "ai-model",
+      modelConfig: {
+        gender: "male",
+        ethnicityRegion: "punjabi",
+        skinTone: "wheatish",
+        hairType: "straight",
+        hairColor: "natural-black",
+        eyeColor: "deep-brown",
+        clothingStyle: "mens-sherwani",
+      },
+    });
+
+    expect(prompt).toContain("male model");
+    expect(prompt).toContain("Sherwani");
+  });
+
   it("should handle custom aspect ratios and quality settings in prompt", () => {
     const prompt = buildTryOnPrompt({
       category: "jhumkas",

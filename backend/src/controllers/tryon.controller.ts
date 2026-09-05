@@ -13,23 +13,40 @@ export class TryOnController {
       const modelFile = files?.modelImage?.[0];
       const jewelryFile = files?.jewelryImage?.[0];
 
-      if (!modelFile) {
-        throw new ValidationError("Please upload a model image.", "MODEL_IMAGE_INVALID");
-      }
-
-      if (!jewelryFile) {
-        throw new ValidationError("Please upload a jewelry product image.", "JEWELRY_IMAGE_INVALID");
-      }
-
       const parsedParams = tryonParamsSchema.safeParse(req.body);
       if (!parsedParams.success) {
         const firstError = parsedParams.error.errors[0]?.message || "Invalid input parameters.";
         throw new ValidationError(firstError, "INVALID_SETTINGS", parsedParams.error.format());
       }
 
+      const isAiModelMode = parsedParams.data.mode === "ai-model";
+
+      if (!isAiModelMode && !modelFile) {
+        throw new ValidationError("Please upload a human model image.", "MODEL_IMAGE_INVALID");
+      }
+
+      if (!jewelryFile) {
+        throw new ValidationError("Please upload a jewelry product image.", "JEWELRY_IMAGE_INVALID");
+      }
+
+      let modelConfigObj = undefined;
+      if (parsedParams.data.modelConfig) {
+        if (typeof parsedParams.data.modelConfig === "string") {
+          try {
+            modelConfigObj = JSON.parse(parsedParams.data.modelConfig);
+          } catch {
+            modelConfigObj = undefined;
+          }
+        } else {
+          modelConfigObj = parsedParams.data.modelConfig;
+        }
+      }
+
       const result = await tryOnService.generateTryOn({
         modelImage: modelFile,
         jewelryImage: jewelryFile,
+        mode: parsedParams.data.mode,
+        modelConfig: modelConfigObj,
         category: parsedParams.data.category,
         customCategoryName: parsedParams.data.customCategoryName,
         customPlacement: parsedParams.data.customPlacement,

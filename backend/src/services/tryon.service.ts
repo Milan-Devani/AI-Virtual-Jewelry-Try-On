@@ -47,60 +47,67 @@ export class TryOnService {
       "Initiating virtual try-on generation pipeline"
     );
 
+    const isAiModelMode = input.mode === "ai-model";
+
     // 1. Strict Format & Dimension Validation
-    const [modelValidation, jewelryValidation] = await Promise.all([
-      validateUploadedImage(input.modelImage, "model"),
-      validateUploadedImage(input.jewelryImage, "jewelry"),
-    ]);
+    let modelValidation = undefined;
+    if (input.modelImage) {
+      modelValidation = await validateUploadedImage(input.modelImage, "model");
+    }
+    const jewelryValidation = await validateUploadedImage(input.jewelryImage, "jewelry");
 
     // 2. AI Vision & Anatomical Compatibility Check (Top/Bottom/Category Mismatch)
-    const visionCheck = await validateTryOnCompatibility({
-      modelBuffer: input.modelImage.buffer,
-      modelMime: modelValidation.mimeType || "image/jpeg",
-      jewelryBuffer: input.jewelryImage.buffer,
-      jewelryMime: jewelryValidation.mimeType || "image/png",
-      category: input.category,
-      customCategoryName: input.customCategoryName,
-      customPlacement: input.customPlacement,
-    });
+    if (input.modelImage && modelValidation) {
+      const visionCheck = await validateTryOnCompatibility({
+        modelBuffer: input.modelImage.buffer,
+        modelMime: modelValidation.mimeType || "image/jpeg",
+        jewelryBuffer: input.jewelryImage.buffer,
+        jewelryMime: jewelryValidation.mimeType || "image/png",
+        category: input.category,
+        customCategoryName: input.customCategoryName,
+        customPlacement: input.customPlacement,
+      });
 
-    if (!visionCheck.valid) {
-      logger.warn(
-        { category: input.category, reason: visionCheck.reason },
-        "Rejected try-on request due to anatomical or category mismatch"
-      );
-      throw new ValidationError(
-        visionCheck.reason ||
-          `The selected category '${categoryName}' is not compatible with the visible parts of the model or the uploaded jewelry product.`,
-        "INVALID_CATEGORY",
-        {
-          suggestedCategory: visionCheck.suggestedCategory,
-          detectedModelRegions: visionCheck.detectedModelRegions,
-          detectedJewelryType: visionCheck.detectedJewelryType,
-        }
-      );
+      if (!visionCheck.valid) {
+        logger.warn(
+          { category: input.category, reason: visionCheck.reason },
+          "Rejected try-on request due to anatomical or category mismatch"
+        );
+        throw new ValidationError(
+          visionCheck.reason ||
+            `The selected category '${categoryName}' is not compatible with the visible parts of the model or the uploaded jewelry product.`,
+          "INVALID_CATEGORY",
+          {
+            suggestedCategory: visionCheck.suggestedCategory,
+            detectedModelRegions: visionCheck.detectedModelRegions,
+            detectedJewelryType: visionCheck.detectedJewelryType,
+          }
+        );
+      }
     }
 
     const storage = getStorageProvider();
 
     // 3. Upload reference assets securely with UUID keys (models/{generationId}/model.webp)
-    const modelWebpBuffer = await sharp(input.modelImage.buffer).webp({ quality: 95 }).toBuffer();
-    const jewelryWebpBuffer = await sharp(input.jewelryImage.buffer).webp({ quality: 95 }).toBuffer();
-
-    const [storedModel, storedJewelry] = await Promise.all([
-      storage.upload({
+    let storedModelUrl = "";
+    if (input.modelImage) {
+      const modelWebpBuffer = await sharp(input.modelImage.buffer).webp({ quality: 95 }).toBuffer();
+      const storedModel = await storage.upload({
         key: `models/${generationId}/model.webp`,
         buffer: modelWebpBuffer,
         mimeType: "image/webp",
         isPublic: true,
-      }),
-      storage.upload({
-        key: `jewelry/${generationId}/product.webp`,
-        buffer: jewelryWebpBuffer,
-        mimeType: "image/webp",
-        isPublic: true,
-      }),
-    ]);
+      });
+      storedModelUrl = storedModel.url;
+    }
+
+    const jewelryWebpBuffer = await sharp(input.jewelryImage.buffer).webp({ quality: 95 }).toBuffer();
+    const storedJewelry = await storage.upload({
+      key: `jewelry/${generationId}/product.webp`,
+      buffer: jewelryWebpBuffer,
+      mimeType: "image/webp",
+      isPublic: true,
+    });
 
     // 4. Register initial record
     const record: GenerationRecord = {
@@ -110,7 +117,7 @@ export class TryOnService {
       background,
       aspectRatio,
       imageSize,
-      modelImageUrl: storedModel.url,
+      modelImageUrl: storedModelUrl,
       jewelryImageUrl: storedJewelry.url,
       status: "processing",
       createdAt: new Date().toISOString(),
@@ -124,6 +131,8 @@ export class TryOnService {
         category: input.category,
         customCategoryName: input.customCategoryName,
         customPlacement: input.customPlacement,
+        mode: input.mode,
+        modelConfig: input.modelConfig,
         background,
         aspectRatio,
         imageSize,
@@ -131,8 +140,8 @@ export class TryOnService {
 
       // 6. Generate with Gemini
       const generatedRaw = await geminiImageService.generateTryOn({
-        modelBuffer: input.modelImage.buffer,
-        modelMime: modelValidation.mimeType || "image/jpeg",
+        modelBuffer: input.modelImage ? input.modelImage.buffer : undefined,
+        modelMime: modelValidation?.mimeType || "image/jpeg",
         jewelryBuffer: input.jewelryImage.buffer,
         jewelryMime: jewelryValidation.mimeType || "image/png",
         prompt,

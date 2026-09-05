@@ -4,15 +4,19 @@ import {
   BackgroundType,
   AspectRatio,
   ImageSizeQuality,
+  AiModelConfig,
+  TryOnMode,
 } from "../types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 const LOCAL_STORAGE_HISTORY_KEY = "jewelai_history_records";
 
 export interface GenerateTryOnPayload {
-  modelFile: File;
+  modelFile?: File | null;
   jewelryFile: File;
   category: string;
+  mode?: TryOnMode;
+  modelConfig?: AiModelConfig;
   customCategoryName?: string;
   customPlacement?: string;
   background: BackgroundType;
@@ -35,9 +39,17 @@ export async function generateTryOnApi(
   signal?: AbortSignal
 ): Promise<TryOnGenerationResult> {
   const formData = new FormData();
-  formData.append("modelImage", payload.modelFile);
+
+  if (payload.modelFile) {
+    formData.append("modelImage", payload.modelFile);
+  }
   formData.append("jewelryImage", payload.jewelryFile);
   formData.append("category", payload.category);
+  formData.append("mode", payload.mode || "custom-model");
+
+  if (payload.modelConfig) {
+    formData.append("modelConfig", JSON.stringify(payload.modelConfig));
+  }
 
   if (payload.customCategoryName) {
     formData.append("customCategoryName", payload.customCategoryName);

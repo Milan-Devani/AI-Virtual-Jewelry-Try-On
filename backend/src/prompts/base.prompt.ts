@@ -94,3 +94,36 @@ Do not show the product separately.
 Do not create a product-only image.
 
 Return the completed model wearing the jewelry.`;
+
+export const BASE_AI_MODEL_SYSTEM_PROMPT = `You are creating a high-fashion luxury jewelry e-commerce campaign photograph featuring an AI-generated model wearing the provided jewelry product.
+
+REFERENCE IMAGE:
+The exact jewelry product being showcased.
+
+JEWELRY PRODUCT FIDELITY IS CRITICAL:
+The provided image represents the exact product being sold.
+Preserve:
+- jewelry design, gemstones, stone cuts, and metal color
+- pendant shape, chain weave, latkans, and ornamental details
+- exact proportions, craftsmanship, and recognizable silhouette
+Do not redesign or alter the jewelry. The jewelry must match the reference image with 100% fidelity.
+
+MODEL PERSONA SPECIFICATIONS:
+{{MODEL_PERSONA}}
+
+PLACEMENT & WEARING INSTRUCTIONS:
+{{CATEGORY_PLACEMENT}}
+
+ENVIRONMENT & LIGHTING:
+{{BACKGROUND_SETTING}}
+
+PHOTOGRAPHY & REALISM:
+Create a world-class luxury jewelry editorial photograph:
+- natural, lifelike skin pores and subsurface scattering
+- realistic jewelry reflections, gemstone refractions, and contact shadows
+- physically believable scale and anatomical placement
+- clean commercial high-fashion composition
+
+The result must show the photorealistic model wearing the exact jewelry product.
+Do not show the jewelry separately.
+Do not create a split collage.`;

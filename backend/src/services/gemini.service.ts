@@ -3,8 +3,8 @@ import { logger } from "../utils/logger.js";
 import { AiProviderError, AiTimeoutError } from "../utils/errors.js";
 
 export interface GenerateTryOnParams {
-  modelBuffer: Buffer;
-  modelMime: string;
+  modelBuffer?: Buffer;
+  modelMime?: string;
   jewelryBuffer: Buffer;
   jewelryMime: string;
   prompt: string;
@@ -76,8 +76,23 @@ export class GeminiImageProvider implements ImageGenerationProvider {
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-      const modelBase64 = params.modelBuffer.toString("base64");
-      const jewelryBase64 = params.jewelryBuffer.toString("base64");
+      const parts: any[] = [{ text: params.prompt }];
+
+      if (params.modelBuffer && params.modelMime) {
+        parts.push({
+          inline_data: {
+            mime_type: params.modelMime,
+            data: params.modelBuffer.toString("base64"),
+          },
+        });
+      }
+
+      parts.push({
+        inline_data: {
+          mime_type: params.jewelryMime,
+          data: params.jewelryBuffer.toString("base64"),
+        },
+      });
 
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${this.apiKey}`;
 
@@ -85,23 +100,7 @@ export class GeminiImageProvider implements ImageGenerationProvider {
         contents: [
           {
             role: "user",
-            parts: [
-              {
-                text: params.prompt,
-              },
-              {
-                inline_data: {
-                  mime_type: params.modelMime,
-                  data: modelBase64,
-                },
-              },
-              {
-                inline_data: {
-                  mime_type: params.jewelryMime,
-                  data: jewelryBase64,
-                },
-              },
-            ],
+            parts,
           },
         ],
         generationConfig: {
@@ -128,10 +127,10 @@ export class GeminiImageProvider implements ImageGenerationProvider {
 
       const data = (await response.json()) as any;
       const candidate = data?.candidates?.[0];
-      const parts = candidate?.content?.parts;
+      const responseParts = candidate?.content?.parts;
 
-      if (parts && Array.isArray(parts)) {
-        for (const part of parts) {
+      if (responseParts && Array.isArray(responseParts)) {
+        for (const part of responseParts) {
           const inline = part.inline_data || part.inlineData;
           if (inline?.data) {
             const buffer = Buffer.from(inline.data, "base64");
