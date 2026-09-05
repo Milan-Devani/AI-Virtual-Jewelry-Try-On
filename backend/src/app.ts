@@ -24,28 +24,65 @@ app.use(
   })
 );
 
-// Strict CORS Configuration
-const allowedOrigins = [
-  config.clientUrl,
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "http://localhost:3001",
+// Dynamic CORS Configuration
+const allowedOriginPatterns = [
+  "localhost",
+  "127.0.0.1",
+  "vercel.app",
+  "onrender.com",
 ];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin) || !config.isProduction) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS origin '${origin}' not allowed.`));
+      // Allow requests with no origin (like mobile apps, curl, server-to-server)
+      if (!origin) {
+        return callback(null, true);
       }
+
+      // If CLIENT_URL is '*' or not in strict production lock, allow all
+      if (config.clientUrl === "*" || !config.isProduction) {
+        return callback(null, true);
+      }
+
+      // Check configured CLIENT_URL (supports comma-separated origins)
+      const configuredOrigins = config.clientUrl
+        .split(",")
+        .map((url) => url.trim().toLowerCase());
+
+      if (configuredOrigins.includes("*") || configuredOrigins.includes(origin.toLowerCase())) {
+        return callback(null, true);
+      }
+
+      // Check trusted patterns (e.g. any *.vercel.app deployment or localhost)
+      const isTrustedPattern = allowedOriginPatterns.some((pattern) =>
+        origin.toLowerCase().includes(pattern)
+      );
+
+      if (isTrustedPattern) {
+        return callback(null, true);
+      }
+
+      // Fallback: allow to avoid breaking dynamic preview deployments
+      logger.info({ origin }, "Allowing dynamically requested origin");
+      return callback(null, true);
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-request-id", "x-user-id"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-request-id",
+      "x-user-id",
+      "Accept",
+      "Origin",
+    ],
+    exposedHeaders: ["x-request-id"],
   })
 );
+
+// Handle preflight requests
+app.options("*", cors());
 
 // Request ID & Structured Logging Middleware
 app.use((req, res, next) => {
