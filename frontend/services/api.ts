@@ -152,7 +152,7 @@ export function saveHistoryLocally(result: TryOnGenerationResult): void {
       background: result.background,
       aspectRatio: result.aspectRatio,
       imageSize: result.imageSize,
-      modelImageUrl: result.modelImageUrl,
+      modelImageUrl: result.modelImageUrl || result.jewelryImageUrl || "",
       jewelryImageUrl: result.jewelryImageUrl,
       generatedImageUrl: result.imageUrl,
       status: "completed",

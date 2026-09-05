@@ -105,9 +105,9 @@ export class GeminiImageProvider implements ImageGenerationProvider {
         ],
         generationConfig: {
           responseModalities: ["IMAGE", "TEXT"],
-          temperature: 0.35,
+          temperature: 0.2,
           topK: 32,
-          topP: 0.95,
+          topP: 0.9,
         },
       };
 
