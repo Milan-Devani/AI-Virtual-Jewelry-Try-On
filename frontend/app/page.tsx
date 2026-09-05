@@ -25,6 +25,33 @@ import { JEWELRY_CATEGORIES } from "../constants/categories";
 import { Sparkles, AlertTriangle, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
+// Smart helper to extract suggested categories from details or message
+function extractSuggestedCategories(
+  detailsCategory?: string,
+  message?: string
+): string[] {
+  const list: string[] = [];
+  if (detailsCategory && JEWELRY_CATEGORIES.some((c) => c.id === detailsCategory)) {
+    list.push(detailsCategory);
+  }
+
+  if (message) {
+    const lower = message.toLowerCase();
+    for (const cat of JEWELRY_CATEGORIES) {
+      if (
+        (lower.includes(`'${cat.id}'`) ||
+          lower.includes(`"${cat.id}"`) ||
+          lower.includes(cat.name.toLowerCase())) &&
+        !list.includes(cat.id)
+      ) {
+        list.push(cat.id);
+      }
+    }
+  }
+
+  return list;
+}
+
 export default function TryOnWorkspacePage() {
   // Modal States
   const [isHistoryOpen, setIsHistoryOpen] = React.useState(false);
@@ -34,10 +61,11 @@ export default function TryOnWorkspacePage() {
   const [mismatchModalData, setMismatchModalData] = React.useState<{
     isOpen: boolean;
     message: string;
-    suggestedCategory?: string;
+    suggestedCategories: string[];
   }>({
     isOpen: false,
     message: "",
+    suggestedCategories: [],
   });
 
   // Model & Jewelry Upload States
@@ -113,11 +141,21 @@ export default function TryOnWorkspacePage() {
       setGenerationError(errorMsg);
 
       // If category or anatomical mismatch occurred, show modal popup
-      if (apiErr?.code === "INVALID_CATEGORY" || errorMsg.toLowerCase().includes("category")) {
+      if (
+        apiErr?.code === "INVALID_CATEGORY" ||
+        errorMsg.toLowerCase().includes("category") ||
+        errorMsg.toLowerCase().includes("mismatch") ||
+        errorMsg.toLowerCase().includes("body")
+      ) {
+        const suggested = extractSuggestedCategories(
+          apiErr?.details?.suggestedCategory,
+          errorMsg
+        ).filter((catId) => catId !== selectedCategory);
+
         setMismatchModalData({
           isOpen: true,
           message: errorMsg,
-          suggestedCategory: apiErr?.details?.suggestedCategory,
+          suggestedCategories: suggested,
         });
       } else {
         toast.error(errorMsg);
@@ -133,7 +171,7 @@ export default function TryOnWorkspacePage() {
 
   const handleSwitchCategory = (newCatId: string) => {
     setSelectedCategory(newCatId);
-    setMismatchModalData({ isOpen: false, message: "" });
+    setMismatchModalData({ isOpen: false, message: "", suggestedCategories: [] });
     setGenerationError(null);
     const catName = JEWELRY_CATEGORIES.find((c) => c.id === newCatId)?.name || newCatId;
     toast.success(`Category updated to '${catName}'`);
@@ -288,7 +326,7 @@ export default function TryOnWorkspacePage() {
       {/* Category / Anatomical Mismatch Modal Popup */}
       <Modal
         isOpen={mismatchModalData.isOpen}
-        onClose={() => setMismatchModalData({ isOpen: false, message: "" })}
+        onClose={() => setMismatchModalData({ isOpen: false, message: "", suggestedCategories: [] })}
         title="Category Selection Mismatch"
         description="Our AI Vision Analysis detected an anatomical placement conflict"
         maxWidth="md"
@@ -306,30 +344,27 @@ export default function TryOnWorkspacePage() {
             To generate a realistic virtual try-on, the visible body region in your model photo must match the jewelry item and selected category.
           </p>
 
-          <div className="pt-2 flex items-center justify-end gap-2.5">
-            {mismatchModalData.suggestedCategory && (
-              <Button
-                variant="gold"
-                size="sm"
-                onClick={() =>
-                  handleSwitchCategory(mismatchModalData.suggestedCategory!)
-                }
-                className="flex items-center gap-1.5"
-              >
-                <span>
-                  Switch to{" "}
-                  {JEWELRY_CATEGORIES.find(
-                    (c) => c.id === mismatchModalData.suggestedCategory
-                  )?.name || mismatchModalData.suggestedCategory}
-                </span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Button>
-            )}
+          <div className="pt-2 flex flex-wrap items-center justify-end gap-2.5">
+            {mismatchModalData.suggestedCategories.map((catId) => {
+              const catName = JEWELRY_CATEGORIES.find((c) => c.id === catId)?.name || catId;
+              return (
+                <Button
+                  key={catId}
+                  variant="gold"
+                  size="sm"
+                  onClick={() => handleSwitchCategory(catId)}
+                  className="flex items-center gap-1.5"
+                >
+                  <span>Switch to {catName}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Button>
+              );
+            })}
 
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setMismatchModalData({ isOpen: false, message: "" })}
+              onClick={() => setMismatchModalData({ isOpen: false, message: "", suggestedCategories: [] })}
             >
               Choose Manually
             </Button>

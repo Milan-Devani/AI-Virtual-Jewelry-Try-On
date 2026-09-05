@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../utils/errors.js";
 import { logger } from "../utils/logger.js";
-import { config } from "../config/index.js";
 import { ApiErrorResponse } from "../types/index.js";
 
 export function errorHandler(
@@ -29,7 +28,7 @@ export function errorHandler(
       error: {
         code: err.code,
         message: err.message,
-        ...(config.isProduction ? {} : { details: err.details }),
+        details: err.details,
       },
     });
     return;
