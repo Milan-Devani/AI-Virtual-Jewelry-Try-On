@@ -135,6 +135,24 @@ Preserve the exact:
 - length, proportions, and draping curve
 - metalwork and finish
 The mangalsutra chain must rest naturally along the neckline and collarbones.`
+  },
+  {
+    id: "mangalsutra-earrings",
+    name: "Mangalsutra with Earrings",
+    placement: "neck & ears",
+    description: "Matching set with auspicious mangalsutra necklace and coordinating earrings",
+    suggestedAspectRatio: "4:5",
+    promptInstructions: `This is a coordinated jewelry set consisting of a Mangalsutra and matching Earrings.
+1. Place the exact mangalsutra naturally around the model's neck and draped over the upper chest.
+   Preserve:
+   - black bead pattern and gold chain links
+   - central pendant design, stones, and motifs
+   - length, proportions, and draping curve
+2. Place the matching earrings naturally on the model's ears.
+   Preserve:
+   - earring shape, stones, hanging latkans, and metalwork
+   - apply the matching pair to both ears
+Ensure cohesive lighting, contact shadows, and realistic perspective across both the neck and ears.`
   }
 ];
 

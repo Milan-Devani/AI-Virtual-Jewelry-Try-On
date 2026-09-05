@@ -57,6 +57,13 @@ export const JEWELRY_CATEGORIES: JewelryCategory[] = [
     description: "Traditional sacred black-beaded gold chain necklace with central pendant",
     suggestedAspectRatio: "4:5",
   },
+  {
+    id: "mangalsutra-earrings",
+    name: "Mangalsutra with Earrings",
+    placement: "neck & ears",
+    description: "Matching set with auspicious mangalsutra necklace and coordinating earrings",
+    suggestedAspectRatio: "4:5",
+  },
 ];
 
 export const BACKGROUND_OPTIONS = [

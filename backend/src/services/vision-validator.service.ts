@@ -66,7 +66,7 @@ Return ONLY a valid JSON object matching this schema:
   "detectedModelRegions": string[],
   "detectedJewelryType": string,
   "reason": "Detailed, polite explanation if valid is false, explaining why the selected category doesn't match the visible model body parts or product type, and suggesting the correct category to choose.",
-  "suggestedCategory": "earrings" | "necklaces-pendants" | "bracelets-wristwear" | "jhumkas" | "payal-anklets" | "maang-tikka" | "haath-phool" | "mangalsutra"
+  "suggestedCategory": "earrings" | "necklaces-pendants" | "bracelets-wristwear" | "jhumkas" | "payal-anklets" | "maang-tikka" | "haath-phool" | "mangalsutra" | "mangalsutra-earrings"
 }`;
 
   try {
