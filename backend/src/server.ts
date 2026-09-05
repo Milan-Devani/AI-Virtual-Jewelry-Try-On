@@ -1,3 +1,10 @@
+import WebSocket from "ws";
+
+// Polyfill global WebSocket for environments without native global.WebSocket
+if (typeof globalThis.WebSocket === "undefined") {
+  (globalThis as any).WebSocket = WebSocket;
+}
+
 import app from "./app.js";
 import { config } from "./config/index.js";
 import { logger } from "./utils/logger.js";
