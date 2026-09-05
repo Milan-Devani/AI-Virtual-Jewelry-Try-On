@@ -99,7 +99,7 @@ export function ResultSection({
       <div className="py-6 flex justify-center">
         {viewMode === "compare" ? (
           <ComparisonSlider
-            originalUrl={result.modelImageUrl}
+            originalUrl={result.modelImageUrl || result.jewelryImageUrl}
             generatedUrl={result.imageUrl}
             categoryName={result.categoryName}
             aspectRatio={result.aspectRatio}
