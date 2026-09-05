@@ -7,6 +7,7 @@ export interface JewelryCategory {
   id: string;
   name: string;
   placement: string;
+  gender?: "female" | "male" | "unisex";
   description: string;
   suggestedAspectRatio: AspectRatio;
 }

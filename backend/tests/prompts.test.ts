@@ -16,6 +16,13 @@ describe("Jewelry Categories & Prompt Engine", () => {
       "mangalsutra",
       "mangalsutra-earrings",
       "full-bridal-set",
+      "mens-chains",
+      "mens-kada",
+      "mens-rings",
+      "mens-brooch-kalgi",
+      "mens-kurta-buttons",
+      "mens-groom-mala",
+      "mens-studs",
     ];
 
     const categoryIds = JEWELRY_CATEGORIES.map((c) => c.id);
@@ -25,6 +32,24 @@ describe("Jewelry Categories & Prompt Engine", () => {
       expect(catObj).toBeDefined();
       expect(catObj?.promptInstructions).toBeTruthy();
     });
+  });
+
+  it("should generate category-specific placement instructions for Men's Chains & Pendants", () => {
+    const prompt = buildTryOnPrompt({ category: "mens-chains", background: "studio" });
+    expect(prompt).toContain("chain link style");
+    expect(prompt).toContain("collarbones");
+  });
+
+  it("should generate category-specific placement instructions for Men's Kada", () => {
+    const prompt = buildTryOnPrompt({ category: "mens-kada", background: "luxury" });
+    expect(prompt).toContain("kada circular profile");
+    expect(prompt).toContain("model's wrist");
+  });
+
+  it("should generate category-specific placement instructions for Groom Moti Mala", () => {
+    const prompt = buildTryOnPrompt({ category: "mens-groom-mala", background: "luxury" });
+    expect(prompt).toContain("multi-strand groom moti mala");
+    expect(prompt).toContain("sherwani");
   });
 
   it("should generate category-specific placement instructions for Full Bridal / All-in-One Set", () => {
