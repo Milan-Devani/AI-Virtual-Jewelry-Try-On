@@ -40,12 +40,9 @@ export async function generateTryOnApi(
 ): Promise<TryOnGenerationResult> {
   const formData = new FormData();
 
-  if (payload.modelFile) {
-    formData.append("modelImage", payload.modelFile);
-  }
-  formData.append("jewelryImage", payload.jewelryFile);
-  formData.append("category", payload.category);
+  // Text fields first for streaming parser reliability
   formData.append("mode", payload.mode || "custom-model");
+  formData.append("category", payload.category);
 
   if (payload.modelConfig) {
     formData.append("modelConfig", JSON.stringify(payload.modelConfig));
@@ -65,6 +62,12 @@ export async function generateTryOnApi(
   if (payload.userId) {
     formData.append("userId", payload.userId);
   }
+
+  // Files
+  if (payload.modelFile) {
+    formData.append("modelImage", payload.modelFile);
+  }
+  formData.append("jewelryImage", payload.jewelryFile);
 
   const response = await fetch(`${API_BASE_URL}/ai-jewelry/generate`, {
     method: "POST",
