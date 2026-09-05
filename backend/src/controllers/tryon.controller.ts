@@ -19,7 +19,8 @@ export class TryOnController {
         throw new ValidationError(firstError, "INVALID_SETTINGS", parsedParams.error.format());
       }
 
-      const isAiModelMode = parsedParams.data.mode === "ai-model";
+      const rawMode = req.body?.mode || parsedParams.data.mode;
+      const isAiModelMode = rawMode === "ai-model" || (!modelFile && !!jewelryFile);
 
       if (!isAiModelMode && !modelFile) {
         throw new ValidationError("Please upload a human model image.", "MODEL_IMAGE_INVALID");
@@ -42,10 +43,12 @@ export class TryOnController {
         }
       }
 
+      const activeMode = isAiModelMode ? "ai-model" : "custom-model";
+
       const result = await tryOnService.generateTryOn({
         modelImage: modelFile,
         jewelryImage: jewelryFile,
-        mode: parsedParams.data.mode,
+        mode: activeMode,
         modelConfig: modelConfigObj,
         category: parsedParams.data.category,
         customCategoryName: parsedParams.data.customCategoryName,

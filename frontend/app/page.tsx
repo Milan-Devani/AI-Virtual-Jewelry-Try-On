@@ -278,10 +278,10 @@ export default function TryOnWorkspacePage() {
               </div>
             </div>
 
-            {/* Dynamic Studio Workspace Layout based on Mode */}
-            {!isAiModelMode ? (
-              /* Mode 1: Dual Upload Grid (Human Model + Product) */
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-in fade-in duration-200">
+            {/* Studio Workspace Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Left Column: Human Model Reference OR AI Virtual Persona Badge Card */}
+              {!isAiModelMode ? (
                 <ImageUploader
                   id="model-image-input"
                   label="1. Human Model Reference"
@@ -289,29 +289,62 @@ export default function TryOnWorkspacePage() {
                   state={modelState}
                   onChange={setModelState}
                 />
+              ) : (
+                <div className="flex flex-col h-full rounded-2xl border-2 border-dashed border-[#B38541]/40 bg-[#FCFAF6] p-5 justify-between animate-in fade-in duration-200">
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#8C6428] bg-[#FAF3E6] px-2.5 py-1 rounded-lg border border-[#E5D5BA] flex items-center gap-1.5">
+                        <Wand2 className="w-3.5 h-3.5 text-[#B38541]" />
+                        <span>AI Virtual Model Mode</span>
+                      </span>
+                      <span className="text-[11px] font-semibold text-[#1E7748] bg-[#ECF7F0] px-2 py-0.5 rounded-md">
+                        Active
+                      </span>
+                    </div>
 
-                <ImageUploader
-                  id="jewelry-image-input"
-                  label="2. Exact Jewelry Product"
-                  subtitle="High-fidelity product photo to place on model"
-                  state={jewelryState}
-                  onChange={setJewelryState}
-                />
-              </div>
-            ) : (
-              /* Mode 2: Product-Only Upload + AI Virtual Model Persona Customizer */
-              <div className="space-y-6 animate-in fade-in duration-200">
-                <div className="max-w-xl mx-auto">
-                  <ImageUploader
-                    id="jewelry-image-input-single"
-                    label="Jewelry Product Photo"
-                    subtitle="Upload the jewelry piece you want the AI model to wear"
-                    state={jewelryState}
-                    onChange={setJewelryState}
-                  />
+                    <h3 className="text-sm font-bold text-[#1A1715] capitalize mb-1">
+                      {aiModelConfig.clothingStyle.replace(/-/g, " ")} Persona
+                    </h3>
+                    <p className="text-xs text-[#7A736B] leading-relaxed mb-4">
+                      No model photo needed. The AI will generate a photorealistic{" "}
+                      <span className="font-semibold text-[#1A1715]">
+                        {aiModelConfig.gender === "male" ? "male" : "female"}
+                      </span>{" "}
+                      model tailored to your selected regional attire, skin tone, and styling below.
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-2.5 rounded-xl bg-white border border-[#E8DFC9]">
+                        <span className="text-[10px] text-[#8A8175] block uppercase font-bold">Skin Tone</span>
+                        <span className="font-medium text-[#1A1715] capitalize">{aiModelConfig.skinTone}</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-white border border-[#E8DFC9]">
+                        <span className="text-[10px] text-[#8A8175] block uppercase font-bold">Hairstyle</span>
+                        <span className="font-medium text-[#1A1715] capitalize">{aiModelConfig.hairType.replace(/-/g, " ")}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 mt-3 border-t border-[#EBE1D2] flex items-center justify-between text-xs text-[#8C6428]">
+                    <span>✨ Customize full persona below</span>
+                    <span className="text-[11px] font-medium">9+ Indian Regional Styles</span>
+                  </div>
                 </div>
+              )}
 
-                {/* AI Virtual Model Customizer */}
+              {/* Right Column: Exact Jewelry Product (100% Persisted across both modes) */}
+              <ImageUploader
+                id="jewelry-image-input"
+                label={isAiModelMode ? "Exact Jewelry Product Photo" : "2. Exact Jewelry Product"}
+                subtitle="High-fidelity product photo to dress onto the model"
+                state={jewelryState}
+                onChange={setJewelryState}
+              />
+            </div>
+
+            {/* AI Virtual Model Customizer Drawer (Visible when in AI Model Mode) */}
+            {isAiModelMode && (
+              <div className="pt-2 animate-in fade-in duration-200">
                 <AiModelCustomizer
                   config={aiModelConfig}
                   onChange={setAiModelConfig}
